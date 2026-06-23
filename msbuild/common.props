@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  common.props — shared MSBuild settings for all alibain projects.
+  Mirrors the C:\Projects\environ house style: v145 toolset, Windows SDK 10.0,
+  /MD runtime, Unicode, C-latest. Imported by each .vcxproj AFTER
+  Microsoft.Cpp.Default.props and BEFORE Microsoft.Cpp.props (so PlatformToolset
+  and CharacterSet take effect). ConfigurationType stays per-project.
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Repo root, independent of whether we build via the solution or a single
+       project. common.props lives in <root>\msbuild\, so ..\ is the root. -->
+  <PropertyGroup>
+    <RepoRoot>$(MSBuildThisFileDirectory)..\</RepoRoot>
+  </PropertyGroup>
+
+  <!-- Configuration-time properties (consumed by Microsoft.Cpp.props). -->
+  <PropertyGroup Label="Configuration">
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Release'">false</UseDebugLibraries>
+    <WholeProgramOptimization Condition="'$(Configuration)'=='Release'">true</WholeProgramOptimization>
+  </PropertyGroup>
+
+  <!-- Output/intermediate layout (environ convention): per-project IntDir so
+       zlib/liblzma/archive .obj files never collide. -->
+  <PropertyGroup>
+    <OutDir>$(RepoRoot)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(RepoRoot)temp\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+
+  <!-- Shared compile/link defaults. -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
+      <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- SDL off: it promotes warnings like C4703 to errors, which vendored
+           libarchive/zlib code legitimately trips. Not our code to "fix".
+           NOTE: common.props is currently imported only by the vendored
+           projects (zlib, archive), so this is effectively a vendor-code
+           exception. If a first-party project is added later, override
+           SDLCheck=true there rather than relaxing it globally. -->
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+
+</Project>

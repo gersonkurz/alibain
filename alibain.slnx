@@ -1,0 +1,8 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="ARM64" />
+  </Configurations>
+  <Project Path="msbuild/zlib.vcxproj" Id="a11b0000-0001-4a5b-9c6d-000000000001" />
+  <Project Path="msbuild/archive.vcxproj" Id="a11b0000-0002-4a5b-9c6d-000000000002" />
+</Solution>

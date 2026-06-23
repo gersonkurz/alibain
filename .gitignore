@@ -44,6 +44,11 @@ build/
 Build/
 build-*/
 
+# alibain MSBuild output (environ convention)
+bin/
+temp/
+dist/
+
 # CMake generated files
 CMakeFiles/
 CMakeCache.txt

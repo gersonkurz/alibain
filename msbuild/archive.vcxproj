@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A11B0000-0002-4A5B-9C6D-000000000002}</ProjectGuid>
+    <ProjectName>archive</ProjectName>
+    <RootNamespace>archive</RootNamespace>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)common.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <PropertyGroup>
+    <!-- Primary SDK artifact: archive.dll + archive.lib import library. -->
+    <TargetName>archive</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <!-- HAVE_CONFIG_H pulls in config/config.h; DLL config must NOT define
+           LIBARCHIVE_STATIC so __LA_DECL resolves to dllexport. -->
+      <AdditionalIncludeDirectories>$(RepoRoot)config;$(RepoRoot)libarchive\libarchive;$(RepoRoot)extern\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_CONFIG_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <!-- bcrypt: CNG crypto. xmllite+uuid: Windows XmlLite for xar (HAVE_XMLLITE_H). -->
+      <AdditionalDependencies>bcrypt.lib;xmllite.lib;uuid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- Link the vendored zlib static lib. -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)zlib.vcxproj">
+      <Project>{A11B0000-0001-4A5B-9C6D-000000000001}</Project>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Bundled BLAKE2 (libarchive ARCHIVE_BLAKE2=TRUE; used by RAR5). Not in the
+         base SOURCES list — CMake appends these when no system libb2 is found. -->
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_blake2sp_ref.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_blake2s_ref.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_acl.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_check_magic.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_cmdline.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_cryptor.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_digest.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_entry.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_entry_copy_stat.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_entry_link_resolver.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_entry_sparse.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_entry_stat.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_entry_strmode.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_entry_xattr.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_hmac.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_match.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_options.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_pack_dev.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_parse_date.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_pathmatch.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_ppmd8.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_ppmd7.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_random.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_rb.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_add_passphrase.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_append_filter.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_data_into_fd.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_disk_entry_from_file.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_disk_posix.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_disk_set_standard_lookup.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_extract.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_extract2.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_open_fd.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_open_file.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_open_filename.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_open_memory.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_set_format.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_set_options.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_all.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_by_code.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_bzip2.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_compress.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_gzip.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_grzip.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_lrzip.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_lz4.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_lzop.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_none.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_program.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_rpm.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_uu.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_xz.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_filter_zstd.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_7zip.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_all.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_ar.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_by_code.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_cab.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_cpio.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_empty.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_iso9660.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_lha.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_mtree.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_rar.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_rar5.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_raw.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_tar.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_warc.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_xar.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_support_format_zip.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_string.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_string_sprintf.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_time.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_util.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_version_details.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_virtual.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_disk_posix.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_disk_set_standard_lookup.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_open_fd.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_open_file.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_open_filename.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_open_memory.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_b64encode.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_by_name.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_bzip2.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_compress.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_grzip.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_gzip.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_lrzip.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_lz4.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_lzop.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_none.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_program.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_uuencode.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_xz.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_add_filter_zstd.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_7zip.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_ar.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_by_name.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_cpio.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_cpio_binary.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_cpio_newc.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_cpio_odc.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_filter_by_ext.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_gnutar.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_iso9660.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_mtree.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_pax.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_raw.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_shar.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_ustar.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_v7tar.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_warc.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_xar.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_format_zip.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_options.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_passphrase.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/filter_fork_posix.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/xxhash.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_disk_windows.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_windows.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_disk_windows.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/filter_fork_windows.c" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
