@@ -4,3 +4,6 @@
 [submodule "extern/zlib"]
 	path = extern/zlib
 	url = https://github.com/madler/zlib.git
+[submodule "extern/xz"]
+	path = extern/xz
+	url = https://github.com/tukaani-project/xz.git

@@ -106,7 +106,7 @@ Deps as **git submodules pinned to release tags** (matches how libarchive is ven
 ~15 portable `.c` → static lib; `zconf.h` ships in-tree (no generation). ARM64: build portable C, disable optional intrinsics, single source set both arches.
 
 ### 5.2 liblzma (xz) *(flips `HAVE_LZMA_H`, `HAVE_LIBLZMA`)* — hard, critical path
-Sources across `src/liblzma/{api,common,check,lz,lzma,rangecoder,delta,simple}`. Hand-author `config/liblzma-config.h` for **decode-only** (LZMA1+LZMA2 decode, `.xz`+`.lzma` containers, CRC32/CRC64/SHA-256 checks) — sufficient for reading `.7z`, smaller surface, no threading needed (§14.4). C CRC tables (no `.S` asm) on both arches. **De-risk: build standalone and validate an LZMA2 decode round-trip before integrating.**
+Sources across `src/liblzma/{api,common,check,lz,lzma,rangecoder,delta,simple}`. Config is `config/liblzma/config.h` (its own dir, via `HAVE_CONFIG_H`): **decoders + basic single-threaded encoders** (LZMA1/LZMA2 + the BCJ/delta filters, `.xz`+`.lzma` containers, CRC32/CRC64/SHA-256). Encoders are included **not** for our use but because libarchive's write-side units (`archive_write_add_filter_xz.c`, `archive_write_set_format_7zip.c`) reference the basic lzma encoder APIs unconditionally when `HAVE_LIBLZMA` is set — decode-only leaves them unresolved at link (see §14.6). **MT encoder stays off** (`ENABLE_THREADS=OFF`, `HAVE_LZMA_STREAM_ENCODER_MT` off), so no `mythread` backend. C CRC tables (no `.S` asm) on both arches; x64/ARM64 differ only in 3 SIMD defines. **De-risked**: built standalone, then validated LZMA1/LZMA2 decode via the smoke test.
 
 ---
 
@@ -195,7 +195,7 @@ Full CTest stays a developer-only path; not a phase-1 gate.
 | 4 | Output | **DLL primary + static** (with documented link set). |
 | 5 | Deps location | **`extern/` submodules**. |
 | 6 | Dep build shape | **Separate static-lib vcxproj per dep**. |
-| 7 | liblzma encoder | **Decode-only** for v1. |
+| 7 | liblzma encoder | **Decoders + basic single-threaded encoders** required by libarchive's write-side link deps; MT encoder stays off. (Revised from "decode-only" — see §5.2 / §14.6.) |
 | 8 | zlib vs zlib-ng | **Stock zlib**. |
 | 9 | Format promise | **ZIP store/deflate/ZIP64/AES; common 7z (LZMA2/PPMd); best-effort RAR**. |
 | **10** | **`.7z` in first release?** | **CLOSED — yes.** `.7z` ships in the first package; liblzma is part of the first deliverable. The "ship ZIP-only" fallback is off the table. |
@@ -211,5 +211,6 @@ Full CTest stays a developer-only path; not a phase-1 gate.
 1. **`LZMA_API_STATIC` is mandatory for static liblzma.** libarchive includes `<lzma.h>` in `archive_read_support_filter_xz.c:43` and `archive_read_support_format_7zip.c:44`. With liblzma built static, `LZMA_API` defaults to `__declspec(dllimport)` → link mismatch. **Define `LZMA_API_STATIC` in every TU including `<lzma.h>`** — `liblzma.vcxproj` *and* `archive.vcxproj`. zlib needs no analogous macro (`<zlib.h>` included plainly, no `ZLIB_DLL`).
 2. **Static-lib name collision.** The DLL's import lib defaults to `archive.lib`; the static config would too. Set the static configuration's output to **`archive_static.lib`** to avoid clobbering the import lib in a shared `dist\` dir.
 3. **Reuse libarchive's shipped fixtures.** `libarchive/libarchive/test/` contains **50 `.zip.uu` / 56 `.7z.uu` / 107 `.rar.uu`** uuencoded reference archives (incl. encrypted + multivolume). Decode a chosen handful into `tests/fixtures/` rather than hand-crafting — authoritative and free.
-4. **Decode-only liblzma needs no threading.** `HAVE_LZMA_STREAM_ENCODER_MT` is encoder-only; a decode-only `liblzma-config.h` can omit the `mythread` backend entirely (no Win32 threading-model selection), shrinking the config.
+4. **liblzma needs no threading (MT encoder off).** `HAVE_LZMA_STREAM_ENCODER_MT` is the multithreaded encoder; with `ENABLE_THREADS=OFF` the `mythread` backend is omitted entirely (no Win32 threading-model selection). The basic single-threaded encoders (§14.6) do not need it.
 5. **No `.def` file needed** (verified non-issue). `__LA_DECL` (`archive.h:129`) auto-selects `dllexport` when building libarchive's own TUs (via `__LIBARCHIVE_BUILD`, `archive_platform.h:40`) and `dllimport` for consumers. Just ensure the **DLL config does not define `LIBARCHIVE_STATIC`**, and the **static config does**.
+6. **liblzma cannot be decode-only with the full libarchive source list.** `archive_write_add_filter_xz.c` and `archive_write_set_format_7zip.c` reference the basic lzma encoder APIs (`lzma_stream_encoder`, `lzma_alone_encoder`, `lzma_raw_encoder`, `lzma_properties_encode/size`) unconditionally whenever `HAVE_LIBLZMA` is set → 5 unresolved externals if liblzma is decode-only. Resolution: build liblzma with **encoders enabled, single-threaded** (cheaper and far less fragile than excluding/patching libarchive's write units, which cascades into the by-name dispatchers). Verified: `liblzma.lib` ~2.7 MB, `archive.dll` ~1.05 MB.

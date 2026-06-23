@@ -11,7 +11,7 @@
  * Hand-flipped relative to the all-off baseline:
  *   HAVE_LIBZ, HAVE_ZLIB_H   = 1   (zlib, vendored under extern/zlib)
  *   HAVE_BCRYPT_H + ARCHIVE_CRYPTO_*_WIN = 1 (Windows CNG; from ENABLE_CNG=ON)
- * Intentionally OFF (Phase 2 / dropped): HAVE_LIBLZMA, HAVE_LIBBZ2, HAVE_LIBZSTD.
+ * Enabled: HAVE_LIBLZMA, HAVE_LZMA_H (Phase 2, liblzma decode). Dropped: HAVE_LIBBZ2, HAVE_LIBZSTD.
  */
 
 /* config.h.  Generated from build/cmake/config.h.in by cmake configure */
@@ -764,7 +764,7 @@ typedef uint64_t uintmax_t;
 /* #undef HAVE_LIBLZ4 */
 
 /* Define to 1 if you have the `lzma' library (-llzma). */
-/* #undef HAVE_LIBLZMA */
+#define HAVE_LIBLZMA 1
 
 /* Define to 1 if you have the `lzo2' library (-llzo2). */
 /* #undef HAVE_LIBLZO2 */
@@ -882,7 +882,7 @@ typedef uint64_t uintmax_t;
 /* #undef HAVE_LZ4_H */
 
 /* Define to 1 if you have the <lzma.h> header file. */
-/* #undef HAVE_LZMA_H */
+#define HAVE_LZMA_H 1
 
 /* Define to 1 if you have a working `lzma_stream_encoder_mt' function. */
 /* #undef HAVE_LZMA_STREAM_ENCODER_MT */

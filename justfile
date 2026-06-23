@@ -39,6 +39,11 @@ smoke: build-release _require-devshell
     cl /nologo /W3 /I libarchive\libarchive tests\smoke\smoke_zip.c /Fe:bin\{{platform}}\Release\smoke_zip.exe /Fo:temp\smoke\ /link bin\{{platform}}\Release\archive.lib
     bin\{{platform}}\Release\smoke_zip.exe tests\fixtures\sample_deflate.zip
     bin\{{platform}}\Release\smoke_zip.exe tests\fixtures\sample_store.zip
+    bin\{{platform}}\Release\smoke_zip.exe tests\fixtures\sample_7z_copy.7z
+    bin\{{platform}}\Release\smoke_zip.exe tests\fixtures\sample_7z_lzma1.7z
+    bin\{{platform}}\Release\smoke_zip.exe tests\fixtures\sample_7z_lzma2.7z
+    bin\{{platform}}\Release\smoke_zip.exe tests\fixtures\sample_rar4.rar
+    bin\{{platform}}\Release\smoke_zip.exe tests\fixtures\sample_rar5.rar
 
 # Stage the Release SDK (DLL + import lib + headers + licenses) for one platform,
 # plus debug symbols under dist\symbols\<Platform> (joint-plan.md §10).
@@ -52,6 +57,8 @@ _stage platform: (_msbuild "Release" platform)
     @copy /Y libarchive\libarchive\archive_entry.h dist\stage\{{platform}}\include\ >nul
     @copy /Y COPYING dist\stage\{{platform}}\licenses\libarchive-COPYING.txt >nul
     @copy /Y extern\zlib\LICENSE dist\stage\{{platform}}\licenses\zlib-LICENSE.txt >nul
+    @copy /Y extern\xz\COPYING dist\stage\{{platform}}\licenses\xz-COPYING.txt >nul
+    @copy /Y extern\xz\COPYING.0BSD dist\stage\{{platform}}\licenses\xz-COPYING.0BSD.txt >nul
     @if exist dist\symbols\{{platform}} rmdir /s /q dist\symbols\{{platform}}
     @mkdir dist\symbols\{{platform}}
     @copy /Y bin\{{platform}}\Release\archive.pdb dist\symbols\{{platform}}\ >nul
@@ -65,10 +72,14 @@ stage-all: (_stage "x64") (_stage "ARM64")
 # Stage, then compile + run the smoke test against the STAGED SDK (staged headers
 # and import lib) — catches staging/packaging regressions the dev-loop smoke misses.
 smoke-stage: (_stage platform) _require-devshell
-    @if not exist temp\smoke mkdir temp\smoke
-    cl /nologo /W3 /I dist\stage\{{platform}}\include tests\smoke\smoke_zip.c /Fe:dist\stage\{{platform}}\bin\smoke_zip.exe /Fo:temp\smoke\ /link dist\stage\{{platform}}\lib\archive.lib
-    dist\stage\{{platform}}\bin\smoke_zip.exe tests\fixtures\sample_deflate.zip
-    dist\stage\{{platform}}\bin\smoke_zip.exe tests\fixtures\sample_store.zip
+    @if exist temp\smoke-stage rmdir /s /q temp\smoke-stage
+    @mkdir temp\smoke-stage
+    cl /nologo /W3 /I dist\stage\{{platform}}\include tests\smoke\smoke_zip.c /Fe:temp\smoke-stage\smoke_zip.exe /Fo:temp\smoke-stage\ /link dist\stage\{{platform}}\lib\archive.lib
+    @copy /Y dist\stage\{{platform}}\bin\archive.dll temp\smoke-stage\ >nul
+    temp\smoke-stage\smoke_zip.exe tests\fixtures\sample_deflate.zip
+    temp\smoke-stage\smoke_zip.exe tests\fixtures\sample_store.zip
+    temp\smoke-stage\smoke_zip.exe tests\fixtures\sample_7z_lzma2.7z
+    temp\smoke-stage\smoke_zip.exe tests\fixtures\sample_rar5.rar
 
 # Zip the staged SDK for one platform.
 [private]

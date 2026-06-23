@@ -43,8 +43,11 @@
     <ClCompile>
       <!-- HAVE_CONFIG_H pulls in config/config.h; DLL config must NOT define
            LIBARCHIVE_STATIC so __LA_DECL resolves to dllexport. -->
-      <AdditionalIncludeDirectories>$(RepoRoot)config;$(RepoRoot)libarchive\libarchive;$(RepoRoot)extern\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>HAVE_CONFIG_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(RepoRoot)config;$(RepoRoot)libarchive\libarchive;$(RepoRoot)extern\zlib;$(RepoRoot)extern\xz\src\liblzma\api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- LZMA_API_STATIC: liblzma is linked statically, so <lzma.h>'s LZMA_API
+           must resolve to plain (not __declspec(dllimport)) in the libarchive
+           TUs that include it (xz filter, 7zip format). -->
+      <PreprocessorDefinitions>HAVE_CONFIG_H;LZMA_API_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <!-- bcrypt: CNG crypto. xmllite+uuid: Windows XmlLite for xar (HAVE_XMLLITE_H). -->
@@ -52,10 +55,13 @@
     </Link>
   </ItemDefinitionGroup>
 
-  <!-- Link the vendored zlib static lib. -->
+  <!-- Link the vendored zlib + liblzma static libs. -->
   <ItemGroup>
     <ProjectReference Include="$(MSBuildThisFileDirectory)zlib.vcxproj">
       <Project>{A11B0000-0001-4A5B-9C6D-000000000001}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)liblzma.vcxproj">
+      <Project>{A11B0000-0003-4A5B-9C6D-000000000003}</Project>
     </ProjectReference>
   </ItemGroup>
 
