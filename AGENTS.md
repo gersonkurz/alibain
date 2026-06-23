@@ -1,40 +1,40 @@
 # Repository Guidelines
 
+`alibain` ("A Libarchive Installation") is a Windows build of the `libarchive` submodule for **x64 and ARM64**, using **pure hand-authored MSBuild — no vcpkg, no CMake in the shipping build**. Goal: reliably *read* `.zip`, `.7z`, and `.rar`. The deliverable is an SDK (DLL + import lib + headers).
+
+**The authoritative design is `joint-plan.md` — read it before writing build files.** All build decisions there are closed.
+
 ## Project Structure & Module Organization
 
-This repository is a small wrapper around the `libarchive` Git submodule. Root-level files hold repository metadata: `README.md`, `COPYING`, and `.gitmodules`. The implementation lives in `libarchive/`:
+- `libarchive/` — the upstream library, a git submodule (the implementation we build).
+- `joint-plan.md` — agreed build plan (authoritative). `claude-plan.md` / `codex-plan.md` are untracked working drafts.
+- Planned, not yet created (see plan §4): `justfile`, `alibain.slnx`, `msbuild/` (`common.props`, `zlib.vcxproj`, `liblzma.vcxproj`, `archive.vcxproj`), `config/` (`config.h`, `liblzma-config.h`), `extern/` (vendored `zlib`, `xz` as pinned submodules), `tests/{smoke,fixtures}/`. Outputs go to `bin\<Platform>\<Config>\`, intermediates to `temp\<Platform>\<Config>\<Project>\`, staged SDK to `dist\`.
 
-- `libarchive/libarchive/` contains the core C library and public headers.
-- `libarchive/tar/`, `libarchive/cpio/`, `libarchive/cat/`, and `libarchive/unzip/` contain command-line front ends.
-- Component tests live beside each component, such as `libarchive/libarchive/test/` and `libarchive/tar/test/`.
-- `libarchive/doc/` contains contributor docs; `libarchive/examples/` contains sample programs.
-
-After cloning, initialize the submodule with `git submodule update --init --recursive`.
+After cloning, initialize submodules: `git submodule update --init --recursive`.
 
 ## Build, Test, and Development Commands
 
-Run commands from the repository root unless noted:
+The shipping build is **pure MSBuild driven by a `justfile`**, mirroring `C:\Projects\environ` (`PlatformToolset=v145`, Windows SDK 10.0, `/MD`, Unicode). This is **not yet implemented**; once it lands the surface mirrors environ: `just build` / `build-release` / `build-all`, `just stage` / `stage-all`, `just package`, `just smoke`, `just clean`. Requires a VS 2026 Developer shell (`VisualStudioVersion=18.0`).
 
-- `cmake -S libarchive -B build -DENABLE_TEST=ON` configures a local CMake build with tests enabled.
-- `cmake --build build` builds the library, tools, and test binaries.
-- `ctest --test-dir build --output-on-failure` runs the registered CTest suite.
-- `.\build\bin\libarchive_test.exe` runs the core library tests directly on Windows; use `./build/bin/libarchive_test` on Unix-like systems.
-- From `libarchive/`, `./configure && make` is the upstream autotools path.
-
-Keep generated output in ignored build directories such as `build/` or `build-*`.
+- **No vcpkg / Conan / NuGet-native / package managers.** Deps (`zlib` v1.3.1, `xz`/liblzma v5.6.4) are vendored as source under `extern/`, built as separate static libs. `bzip2`/`zstd` are dropped.
+- **CMake is only an offline oracle** — run once to capture libarchive's generated `config.h` + source list, then hand-translate into `config/config.h` + explicit `.vcxproj`. Never a build dependency.
+- To explore the submodule standalone (reference only): `cmake -S libarchive -B libarchive/build && cmake --build libarchive/build`; tests via `ctest --test-dir libarchive/build`.
 
 ## Coding Style & Naming Conventions
 
-Libarchive is C code and generally follows BSD KNF. Match the surrounding file style, use hard tabs in new C files, and avoid whitespace-only churn. Test files use descriptive `test_*.c` names, for example `test_read_format_zip_mac_metadata.c`. Test functions are registered with `DEFINE_TEST(test_name)` and should usually match the filename.
+For changes inside `libarchive/`, follow upstream BSD KNF: match surrounding style, hard tabs in C files, no whitespace churn. For alibain's own MSBuild/config files, match the `environ` conventions (centralize shared settings in `msbuild/common.props`; explicit source lists, no globs, so version bumps force a reviewed diff).
 
 ## Testing Guidelines
 
-Most functional changes should add or update tests in the relevant component `test/` directory. Add new C test files to the appropriate `CMakeLists.txt`; update `Makefile.am` as needed for autotools, keeping lists alphabetical. Store binary fixtures as `.uu` files and load them with helpers such as `extract_reference_file()`. Use the assertion helpers from `test_utils/test_common.h` so failures include useful diagnostics.
+Validation is small and targeted, independent of upstream CTest. **Reuse libarchive's shipped `.uu` fixtures** in `libarchive/libarchive/test/` (50 `.zip`, 56 `.7z`, 107 `.rar`) rather than hand-crafting. Smoke tests must assert *real* codec support (store/deflate/ZIP64/AES zip, LZMA2 + PPMd 7z, RAR4/RAR5) and that unsupported bzip2/zstd entries **fail cleanly, not crash**. The full libarchive CTest suite stays a developer-only path, not a release gate.
 
 ## Commit & Pull Request Guidelines
 
-The visible history only contains `Initial commit`, so there is no established local commit convention. Use concise, imperative subjects such as `Fix zip64 size validation` and keep each commit focused on one issue. Pull requests should describe the bug or feature, include reproduction steps when relevant, list tests run, and mention the target platform/compiler. Link related issues and include fixtures or logs for archive-specific failures.
+- **Do not add AI/tool attribution** — no `Co-Authored-By: Claude …` or "Generated with Claude Code" trailers in commits or PRs.
+- Use concise, imperative subjects (e.g. `Add zlib static-lib project`); keep each commit focused. PRs should state scope, the target platform/arch, and validation run.
 
 ## Security & Configuration Tips
 
-Do not commit generated binaries, archives from failed tests, local caches, or dependency build output. For security-sensitive archive handling changes, review `libarchive/SECURITY.md` and add regression tests that exercise malformed or hostile inputs.
+- **xz supply chain:** pin the **git tag (v5.6.4), not a release tarball** (CVE-2024-3094 lived only in the generated tarball), and never run xz's own build system — these structurally avoid the backdoor. Record the exact commit; review before any bump.
+- Crypto uses Windows CNG (`bcrypt.lib`); no OpenSSL. For archive-handling changes, review `libarchive/SECURITY.md` and exercise malformed/hostile inputs.
+- Do not commit generated output (`bin/`, `temp/`, `dist/`) or dependency build artifacts.

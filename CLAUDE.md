@@ -2,58 +2,59 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Current state
+## What this repo is
 
-This repository (`alibain`) is in its initial stage. It contains **no application source or root build system yet** — the only substantive content is the [libarchive](https://github.com/libarchive/libarchive) library vendored as a git submodule under `libarchive/` (pinned to `v3.7.5-1118-gca1e27dd`).
+`alibain` ("**A Lib**archive **In**stallation") is a Windows build of [libarchive](https://github.com/libarchive/libarchive) for **x64 and ARM64**, built with **pure hand-authored MSBuild — no vcpkg, no CMake in the shipping build**. The deliverable is an SDK (DLL + import lib + headers).
 
-The `.gitignore` is set up for a C/C++ project built with **CMake** (it ignores `build/`, `CMakeFiles/`, MSVC artifacts like `*.pdb`/`*.ilk`, and also has a `vcpkg_installed/` entry). New code added here is expected to follow a CMake toolchain. Note: alibain itself has no dependency-management tooling wired up yet — the `vcpkg_installed/` ignore line is just a placeholder, not an active setup (see below).
+**Goal:** reliably *read* the common Windows archive formats — `.zip`, `.7z`, `.rar`.
+
+libarchive itself is the `libarchive/` git submodule. This repo adds the Windows build around it.
+
+## Authoritative design: `joint-plan.md`
+
+**Read `joint-plan.md` before writing any build files.** It is the agreed, decisions-closed plan (jointly authored, supersedes the untracked `claude-plan.md`/`codex-plan.md`). Key locked decisions an agent must not silently violate:
+
+- **Pure hand-authored MSBuild** (`.vcxproj` + `.slnx`) driven by a `justfile`, mirroring the `C:\Projects\environ` house style: `PlatformToolset=v145`, Windows SDK `10.0`, **`/MD`**, Unicode, `stdclatest`.
+- **No vcpkg / package managers.** Dependencies **`zlib` (v1.3.1)** and **`liblzma`/xz (v5.6.4)** are vendored as **source** under `extern/` (pinned submodules), each built as a **separate static lib**. `bzip2` and `zstd` are **deliberately dropped** (rare on Windows; such entries must fail cleanly).
+- **CMake is NOT part of the build.** It is used only *offline, once*, as a reference oracle to capture libarchive's generated `config.h` + source list, which are then hand-translated into checked-in `config/config.h` and an explicit `.vcxproj` ItemGroup. Do not add CMake as a build dependency.
+- **liblzma is decode-only** (sufficient for reading `.7z`; no threading config needed).
+- **Crypto via Windows CNG (`bcrypt`)** — no OpenSSL/mbedTLS/Nettle. Covers AES-encrypted zip.
+
+### Status
+
+**Planning / not yet implemented.** No `justfile`, `.vcxproj`, `.slnx`, `config/`, or `extern/` exist yet. The build lands in phases (see `joint-plan.md` §11): zlib+ZIP first, then liblzma+7z/RAR (both in the first package), then packaging.
+
+### Implementation gotchas (verified — see `joint-plan.md` §14)
+
+- **`LZMA_API_STATIC`** must be defined in every TU including `<lzma.h>` (`liblzma.vcxproj` *and* `archive.vcxproj`), or static liblzma link fails. zlib needs no analogue.
+- The static lib must output **`archive_static.lib`** to avoid clobbering the DLL's `archive.lib` import lib.
+- **No `.def` file needed**: `__LA_DECL` auto-selects `dllexport`/`dllimport`. Just ensure the DLL config does *not* define `LIBARCHIVE_STATIC` and the static config does.
+- libarchive consumes the static config via `HAVE_CONFIG_H` + `config/` on the include path (`archive_platform.h:42` also supports `PLATFORM_CONFIG_H`).
 
 ## Submodule setup
 
-`libarchive/` is a submodule and is empty after a plain `git clone`. Before building anything, initialize it:
+After a plain `git clone` the submodule is empty. Initialize it before doing anything:
 
 ```sh
 git submodule update --init --recursive
 ```
 
-When cloning fresh, use `git clone --recursive <url>` to pull it in one step.
-
-## Building libarchive (reference)
-
-libarchive has its own CMake build under `libarchive/`. On this Windows host, a typical out-of-source build:
-
-```sh
-cmake -S libarchive -B libarchive/build
-cmake --build libarchive/build --config Release
-```
-
-Run its test suite (CTest) after building:
-
-```sh
-ctest --test-dir libarchive/build -C Release
-# single test by name:
-ctest --test-dir libarchive/build -C Release -R <test_name>
-```
-
-libarchive can also be built with autotools on POSIX (`cd libarchive && ./build/autogen.sh && ./configure && make`), but CMake is the path that matches this repo's `.gitignore` and Windows environment.
-
-### Optional compression dependencies (vcpkg)
-
-libarchive's core (tar/cpio containers, the read/write API) builds with no external dependencies. Its compression *filters* each need a backing library, and CMake auto-detects whichever are present — missing ones are simply compiled out. The libraries are: `zlib` (gzip/zip deflate), `bzip2`, `liblzma` (xz/lzma), and `zstd`.
-
-The only vcpkg usage in this repo is libarchive's own Windows CI manifest, `libarchive/build/ci/github_actions/vcpkg.json`, which fetches exactly those four libraries before building (on Windows they aren't system packages). If you want those filters enabled in a local Windows build, install the same packages via vcpkg and point CMake at the vcpkg toolchain file; otherwise libarchive still builds with reduced format/filter support.
+(or `git clone --recursive <url>`).
 
 ## libarchive architecture (the submodule)
 
-When working inside `libarchive/`, the layout matters because the codebase is large but highly regular:
+The codebase is large but highly regular; filenames encode role:
 
-- `libarchive/libarchive/` — the core library. The public API is `archive.h` and `archive_entry.h`. Internals are split into orthogonal, pluggable modules whose filenames encode their role:
-  - `archive_read_support_format_*.c` / `archive_write_set_format_*.c` — container formats (tar, zip, 7zip, iso9660, cpio, mtree, …).
-  - `archive_read_support_filter_*.c` / `archive_write_add_filter_*.c` — compression/encoding filters (gzip, bzip2, xz, lz4, zstd, …) layered independently of the format.
-  - Reading and writing are symmetric: most features exist as a matched read/write pair.
-- `libarchive/tar/`, `cpio/`, `cat/`, `unzip/` — the command-line front-ends (bsdtar, bsdcpio, bsdcat, bsdunzip) built on top of the library.
-- `libarchive/libarchive_fe/` — shared front-end helper code.
-- `libarchive/test_utils/` and each component's `test/` directory — the test harness; tests are typically self-contained C files registered with the build.
-- `libarchive/examples/` — small standalone programs demonstrating the API; the clearest entry point for understanding usage.
+- `libarchive/libarchive/` — the core library. Public API is `archive.h` + `archive_entry.h`.
+  - `archive_read_support_format_*.c` / `archive_write_set_format_*.c` — container formats (zip, 7zip, rar/rar5, tar, …).
+  - `archive_read_support_filter_*.c` / `archive_write_add_filter_*.c` — compression filters (gzip, xz, …), layered independently of format.
+  - Each optional codec is gated behind a `HAVE_*` macro in `config.h`. RAR (rar/rar5) and 7z PPMd decoders are **built in** (no external lib).
+- `libarchive/libarchive/test/` — reference test fixtures as `.uu` files (50 `.zip`, 56 `.7z`, 107 `.rar`). **Reuse these for smoke tests** rather than hand-crafting.
+- `libarchive/{tar,cpio,cat,unzip}/` — CLI front-ends (out of scope here).
 
-To add support for a new format or filter inside libarchive, add the matching `archive_read_support_*` / `archive_write_*` source, register it in `CMakeLists.txt` and the autotools `Makefile.am`, and add a paired test.
+To explore the submodule standalone (reference only — **not** this project's build), libarchive has its own CMake build: `cmake -S libarchive -B libarchive/build && cmake --build libarchive/build`. Do not let this leak into alibain's MSBuild deliverable.
+
+## Commit conventions
+
+- **No AI/tool attribution in commits or PRs** — do not add `Co-Authored-By: Claude …` or "Generated with Claude Code" trailers.
+- Concise, imperative subjects; keep each commit focused.
