@@ -1,6 +1,6 @@
 # alibain
 
-**A Lib**archive **In**stallation — a Windows build of [libarchive](https://github.com/libarchive/libarchive) for **x64** and **ARM64**, built with **pure MSBuild** (no vcpkg, no CMake in the shipping build), packaged as an SDK (DLL + import library + headers).
+**A Lib**archive **In**stallation — a Windows build of [libarchive](https://github.com/libarchive/libarchive) for **x64** and **ARM64**, built with **pure MSBuild** (no vcpkg, no CMake in the shipping build), packaged as an SDK (DLL + import library + headers, plus the licenses and a CycloneDX SBOM, `sbom\archive.cdx.json`, naming libarchive, xz and zlib at the commits built — the DLL has no version resource and links xz/zlib statically, so nothing reading the file can tell).
 
 ## Goal
 

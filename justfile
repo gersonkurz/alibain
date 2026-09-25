@@ -45,8 +45,10 @@ smoke: build-release _require-devshell
     bin\{{platform}}\Release\smoke_zip.exe tests\fixtures\sample_rar4.rar
     bin\{{platform}}\Release\smoke_zip.exe tests\fixtures\sample_rar5.rar
 
-# Stage the Release SDK (DLL + import lib + headers + licenses) for one platform,
-# plus debug symbols under dist\symbols\<Platform> (joint-plan.md §10).
+# Stage the Release SDK (DLL + import lib + headers + licenses + SBOM) for one platform,
+# plus debug symbols under dist\symbols\<Platform> (joint-plan.md §10). The SBOM
+# (sbom\archive.cdx.json) names libarchive, xz and zlib at the commits built here: the DLL has
+# no version resource and links xz/zlib statically, so only the build can say what is inside.
 [private]
 _stage platform: (_msbuild "Release" platform)
     @if exist dist\stage\{{platform}} rmdir /s /q dist\stage\{{platform}}
@@ -59,6 +61,7 @@ _stage platform: (_msbuild "Release" platform)
     @copy /Y extern\zlib\LICENSE dist\stage\{{platform}}\licenses\zlib-LICENSE.txt >nul
     @copy /Y extern\xz\COPYING dist\stage\{{platform}}\licenses\xz-COPYING.txt >nul
     @copy /Y extern\xz\COPYING.0BSD dist\stage\{{platform}}\licenses\xz-COPYING.0BSD.txt >nul
+    @powershell -NoProfile -ExecutionPolicy Bypass -File scripts\sbom.ps1 -Out dist\stage\{{platform}}\sbom\archive.cdx.json
     @if exist dist\symbols\{{platform}} rmdir /s /q dist\symbols\{{platform}}
     @mkdir dist\symbols\{{platform}}
     @copy /Y bin\{{platform}}\Release\archive.pdb dist\symbols\{{platform}}\ >nul
