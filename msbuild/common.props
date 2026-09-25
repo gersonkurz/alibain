@@ -45,7 +45,20 @@
            SDLCheck=true there rather than relaxing it globally. -->
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <!-- Reproducible output: /Brepro replaces the timestamp and the PDB GUID MSVC writes into
+           every object, library and image with content hashes, so the same sources and
+           toolchain build byte-identical archive.dll/archive.lib - the SBOM's file hash then
+           identifies the commit, not one build. `just repro-check` proves it. -->
+      <AdditionalOptions>/Brepro %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <Lib>
+      <AdditionalOptions>/Brepro %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+    <Link>
+      <!-- /PDBALTPATH:%_PDB% records only the PDB's file name, not the absolute path of the tree
+           it was built in (C:\Projects\alibain\bin\...). %25 is MSBuild's escape for a literal %. -->
+      <AdditionalOptions>/Brepro /PDBALTPATH:%25_PDB%25 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
   </ItemDefinitionGroup>
 
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">

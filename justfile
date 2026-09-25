@@ -104,3 +104,8 @@ clean:
 
 # Clean + build.
 rebuild: clean build
+
+# Prove the Release build is reproducible (native arch): two clean builds in this tree must
+# produce byte-identical archive.dll and archive.lib (/Brepro in msbuild\common.props).
+repro-check: _require-devshell
+    @powershell -NoProfile -ExecutionPolicy Bypass -File scripts\repro-check.ps1 -Platform {{platform}}
