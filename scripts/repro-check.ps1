@@ -16,7 +16,12 @@ function Build-Clean {
     if ($LASTEXITCODE -ne 0) { throw "msbuild failed ($LASTEXITCODE)" }
     $h = @{}
     foreach ($o in $outputs) {
-        $h[$o] = (Get-FileHash -Algorithm SHA256 (Join-Path $root $o)).Hash
+        # .NET, not Get-FileHash: run from a PowerShell 7 prompt, Windows PowerShell 5.1 inherits
+        # PowerShell 7's PSModulePath, loads its Microsoft.PowerShell.Utility, and has no
+        # Get-FileHash (a script function in 5.1's copy of that module).
+        $sha = [Security.Cryptography.SHA256]::Create()
+        try { $bytes = $sha.ComputeHash([IO.File]::ReadAllBytes((Join-Path $root $o))) } finally { $sha.Dispose() }
+        $h[$o] = -join ($bytes | ForEach-Object { $_.ToString('X2') })
         if ($h[$o] -notmatch '^[0-9A-F]{64}$') { throw "no hash for $o" }
     }
     , $h
