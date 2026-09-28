@@ -73,6 +73,7 @@
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_acl.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_check_magic.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_cmdline.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_crc32.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_cryptor.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_digest.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_entry.c" />
@@ -142,6 +143,7 @@
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_string.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_string_sprintf.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_time.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_umask.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_util.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_version_details.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_virtual.c" />
@@ -191,6 +193,7 @@
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_set_passphrase.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/filter_fork_posix.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/xxhash.c" />
+    <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_entry_copy_bhfi.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_read_disk_windows.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_windows.c" />
     <ClCompile Include="$(RepoRoot)libarchive/libarchive/archive_write_disk_windows.c" />
