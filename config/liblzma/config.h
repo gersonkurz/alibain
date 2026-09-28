@@ -7,7 +7,7 @@
  * config/config.h. (Encoders are included only because libarchive's write-side
  * files require the basic lzma encoders to link — see the encoder note below.)
  *
- * Derived from xz's own CMake "oracle" (joint-plan.md §6) run as:
+ * Derived from xz's own CMake "oracle" (README.md, Maintenance) run as:
  *   cmake -S extern/xz -A {x64|ARM64} -DBUILD_SHARED_LIBS=OFF \
  *     -DENABLE_THREADS=OFF -DENABLE_NLS=OFF -DENABLE_DOC=OFF -DXZ_TOOL_*=OFF
  * The x64 and ARM64 define sets differ ONLY in the three x86 SIMD macros

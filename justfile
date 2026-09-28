@@ -46,7 +46,7 @@ smoke: build-release _require-devshell
     bin\{{platform}}\Release\smoke_zip.exe tests\fixtures\sample_rar5.rar
 
 # Stage the Release SDK (DLL + import lib + headers + licenses + SBOM) for one platform,
-# plus debug symbols under dist\symbols\<Platform> (joint-plan.md §10). The SBOM
+# plus debug symbols under dist\symbols\<Platform>. The SBOM
 # (sbom\archive.cdx.json) names libarchive, xz and zlib at the commits built here: the DLL has
 # no version resource and links xz/zlib statically, so only the build can say what is inside.
 [private]
