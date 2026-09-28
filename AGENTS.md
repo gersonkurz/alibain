@@ -9,7 +9,7 @@
 - `libarchive/`, `extern/zlib` (v1.3.1), `extern/xz` (v5.6.4) are pinned git submodules. Run `git submodule update --init --recursive` after cloning.
 - `msbuild/` holds `common.props` (shared settings) and `zlib.vcxproj` and `liblzma.vcxproj` (static libs). It also holds `archive.vcxproj`, the DLL, which references both. `alibain.slnx` ties them together.
 - `config/config.h` (libarchive) and `config/liblzma/config.h` (xz) are checked-in build configs, consumed via `HAVE_CONFIG_H`.
-- `scripts/sbom.ps1` writes the SBOM, and `scripts/repro-check.ps1` backs `just repro-check`.
+- `scripts/sbom.ps1` writes the SBOM, `scripts/package.ps1` zips the staged SDK, and `scripts/repro-check.ps1` backs `just repro-check`. Recipes call PowerShell with `-File`, never an inline `-Command "..."`: just escapes the inner quotes as `\"`, which cmd does not understand, so PowerShell only echoes the string and exits 0.
 - `tests/smoke/smoke_zip.c` is a minimal consumer. `tests/fixtures/` holds sample archives.
 - Build output goes to `bin\<Platform>\<Config>\`, intermediates to `temp\…`, and the staged SDK to `dist\` (all git-ignored).
 

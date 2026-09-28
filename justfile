@@ -17,7 +17,7 @@ default:
 # Fail early with a clear message when not in a VS 2026 Developer shell.
 [private]
 _require-devshell:
-    @if not "%VisualStudioVersion%"=="18.0" (echo. & echo ERROR: needs a Visual Studio 2026 Developer shell. & echo Open "Developer Command Prompt/PowerShell for VS 2026" and retry. & echo Expected VisualStudioVersion=18.0 but found "%VisualStudioVersion%". & exit /b 1)
+    @if not "%VisualStudioVersion%"=="18.0" (echo. & echo ERROR: needs a Visual Studio 2026 Developer shell. & echo Open the Developer Command Prompt or PowerShell for VS 2026 and retry. & echo Expected VisualStudioVersion=18.0 but found [%VisualStudioVersion%]. & exit /b 1)
 
 # Build one configuration/platform (zlib is pulled in via ProjectReference).
 [private]
@@ -87,8 +87,7 @@ smoke-stage: (_stage platform) _require-devshell
 # Zip the staged SDK for one platform.
 [private]
 _package platform: (_stage platform)
-    @if exist dist\alibain-libarchive-{{platform}}.zip del /q dist\alibain-libarchive-{{platform}}.zip
-    powershell -NoProfile -Command "Compress-Archive -Path dist\stage\{{platform}}\* -DestinationPath dist\alibain-libarchive-{{platform}}.zip -Force"
+    @powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package.ps1 -Platform {{platform}}
 
 # Package the native-arch SDK zip.
 package: (_package platform)

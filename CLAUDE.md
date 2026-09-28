@@ -49,6 +49,7 @@ To test one archive, run `bin\<Platform>\Release\smoke_zip.exe <archive>` after 
 ## Staging, SBOM, reproducibility
 
 - `_stage` in the justfile defines the SDK layout. Any new vendored dependency needs its license copied there.
+- **justfile recipes call PowerShell only via `-File scripts\<name>.ps1`.** Never write `powershell -Command "..."` inline. just passes the line to `cmd /c` with the inner quotes escaped as `\"`, and cmd does not understand that, so PowerShell receives one string literal, echoes it and exits 0. The recipe then "succeeds" without doing anything; this is how `just package` once silently produced no zips.
 - `scripts/sbom.ps1` writes `sbom\archive.cdx.json` from each submodule's HEAD commit and the version `#define` in its headers. The SBOM exists because the DLL has no version resource and links xz/zlib statically. Downstream `ptraced-qt` consumes it. The output must stay deterministic (no timestamps or serial number) and be UTF-8 **without BOM**, and the script must run under Windows PowerShell 5.1.
 - Anything that adds nondeterminism to Release output breaks `just repro-check` and the SBOM file-hash story.
 
