@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Setup
 
-Three submodules are pinned: `libarchive/`, `extern/zlib` (v1.3.1) and `extern/xz` (v5.6.4, **git tag, not tarball**, which structurally avoids CVE-2024-3094). After cloning:
+Three submodules are pinned: `libarchive/`, `extern/zlib` (v1.3.2) and `extern/xz` (v5.6.4, **git tag, not tarball**, which structurally avoids CVE-2024-3094). After cloning:
 
 ```sh
 git submodule update --init --recursive

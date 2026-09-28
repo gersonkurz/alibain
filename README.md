@@ -50,7 +50,7 @@ Output goes to `bin\<Platform>\<Config>\`, intermediates to `temp\`, and the sta
 
 ## How it is built
 
-- `msbuild/zlib.vcxproj` and `msbuild/liblzma.vcxproj` build static libs from the pinned source submodules `extern/zlib` (v1.3.1) and `extern/xz` (v5.6.4). `msbuild/archive.vcxproj` builds the DLL from the `libarchive/` submodule and links both. Shared settings live in `msbuild/common.props`.
+- `msbuild/zlib.vcxproj` and `msbuild/liblzma.vcxproj` build static libs from the pinned source submodules `extern/zlib` (v1.3.2) and `extern/xz` (v5.6.4). `msbuild/archive.vcxproj` builds the DLL from the `libarchive/` submodule and links both. Shared settings live in `msbuild/common.props`.
 - Source lists are **explicit**, with no globs, so a version bump shows up as a reviewed diff.
 - libarchive's and liblzma's `config.h` are **checked in** under `config/`. They are not generated at build time.
 - Crypto uses Windows CNG. There is no OpenSSL.
