@@ -42,6 +42,12 @@
            static lib, so lzma.h's LZMA_API must NOT be __declspec(dllimport).
            Include dirs mirror xz's CMake oracle. -->
       <PreprocessorDefinitions>HAVE_CONFIG_H;LZMA_API_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <!-- C17, not common.props' stdclatest: MSVC's /std:clatest reports __STDC_VERSION__ as
+           C23, so xz's sysdefs.h treats alignas as a C23 keyword and leaves it undefined, but
+           MSVC's C compiler does not implement that keyword: the x64 CLMUL CRC code
+           (crc_x86_clmul.h, alignas(64)) then fails to compile. Under C17 sysdefs.h maps
+           alignas to _Alignas, which MSVC supports. -->
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalIncludeDirectories>$(RepoRoot)config\liblzma;$(RepoRoot)extern\xz\src\liblzma\api;$(RepoRoot)extern\xz\src\liblzma\common;$(RepoRoot)extern\xz\src\liblzma\check;$(RepoRoot)extern\xz\src\liblzma\lz;$(RepoRoot)extern\xz\src\liblzma\rangecoder;$(RepoRoot)extern\xz\src\liblzma\lzma;$(RepoRoot)extern\xz\src\liblzma\delta;$(RepoRoot)extern\xz\src\liblzma\simple;$(RepoRoot)extern\xz\src\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -50,9 +56,7 @@
     <ClCompile Include="$(RepoRoot)extern/xz/src/common/tuklib_physmem.c" />
     <ClCompile Include="$(RepoRoot)extern/xz/src/liblzma/check/check.c" />
     <ClCompile Include="$(RepoRoot)extern/xz/src/liblzma/check/crc32_fast.c" />
-    <ClCompile Include="$(RepoRoot)extern/xz/src/liblzma/check/crc32_table.c" />
     <ClCompile Include="$(RepoRoot)extern/xz/src/liblzma/check/crc64_fast.c" />
-    <ClCompile Include="$(RepoRoot)extern/xz/src/liblzma/check/crc64_table.c" />
     <ClCompile Include="$(RepoRoot)extern/xz/src/liblzma/check/sha256.c" />
     <ClCompile Include="$(RepoRoot)extern/xz/src/liblzma/common/alone_decoder.c" />
     <ClCompile Include="$(RepoRoot)extern/xz/src/liblzma/common/alone_encoder.c" />

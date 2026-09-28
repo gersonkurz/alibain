@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Setup
 
-Three submodules are pinned: `libarchive/`, `extern/zlib` (v1.3.2) and `extern/xz` (v5.6.4, **git tag, not tarball**, which structurally avoids CVE-2024-3094). After cloning:
+Three submodules are pinned: `libarchive/`, `extern/zlib` (v1.3.2) and `extern/xz` (v5.8.4, **git tag, not tarball**, which structurally avoids CVE-2024-3094). After cloning:
 
 ```sh
 git submodule update --init --recursive
@@ -42,7 +42,7 @@ To test one archive, run `bin\<Platform>\Release\smoke_zip.exe <archive>` after 
 - **Source lists are explicit `ClCompile` items, never globs.** That way a submodule bump forces a reviewed diff. The lists were captured once from CMake used as an offline oracle and translated by hand. **CMake is never a build dependency.** Adding a libarchive source means editing `archive.vcxproj`. The two bundled BLAKE2 files (for RAR5) are listed separately because CMake appends them conditionally.
 - **Config headers are checked in, not generated.** `config/config.h` is libarchive's, consumed via `HAVE_CONFIG_H`. `config/liblzma/config.h` is xz's and lives in its own directory so the two `config.h` files don't collide on the include path. Enabling or disabling a codec means flipping `HAVE_*` macros there.
 - **`LZMA_API_STATIC`** must be defined in every TU that includes `<lzma.h>`, in both `liblzma.vcxproj` and `archive.vcxproj`, or linking fails.
-- **liblzma is not decode-only.** It includes the basic single-threaded encoders because libarchive's write-side units reference them whenever `HAVE_LIBLZMA` is set. Multithreading is off. x64 and ARM64 differ only in three SIMD defines.
+- **liblzma is not decode-only.** It includes the basic single-threaded encoders because libarchive's write-side units reference them whenever `HAVE_LIBLZMA` is set. Multithreading is off. x64 and ARM64 differ only in three SIMD defines. liblzma compiles as **C17**, not `stdclatest`: under `/std:clatest` MSVC reports C23, so xz treats `alignas` as a keyword, which MSVC C lacks, and the x64 CLMUL CRC code fails to compile.
 - **Exports:** no `.def` file. `__LA_DECL` selects `dllexport`/`dllimport`, so the DLL must never define `LIBARCHIVE_STATIC`. The SDK is DLL-only by design; there is no static-library build.
 - Crypto uses Windows CNG (`bcrypt.lib`) with no OpenSSL. The DLL also links `xmllite.lib`/`uuid.lib` for xar.
 

@@ -12,6 +12,13 @@
  *     -DENABLE_THREADS=OFF -DENABLE_NLS=OFF -DENABLE_DOC=OFF -DXZ_TOOL_*=OFF
  * The x64 and ARM64 define sets differ ONLY in the three x86 SIMD macros
  * below; the source list is identical. Re-run the oracle on an xz bump.
+ *
+ * Carried to v5.8.4 by review instead of a re-run: no macro set here was
+ * dropped, and the feature macros new since v5.6.4 (HAVE_CRC_X86_ASM,
+ * HAVE_HWCAP_CRC32, HAVE_LOONGARCH_CRC32, HAVE_VASPRINTF, TUKLIB_MBSTR_*)
+ * are 32-bit GCC asm, Linux, LoongArch or xz-tool only. 5.8 renamed the
+ * options above to XZ_* (XZ_THREADS=no, XZ_NLS=OFF, XZ_DOC=OFF, ...); CMake
+ * ignores the old names, so update them before any re-run.
  */
 
 #ifndef ALIBAIN_LIBLZMA_CONFIG_H
