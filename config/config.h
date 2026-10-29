@@ -21,7 +21,6 @@
  * libarchive bump, and diff x64 vs ARM64 output to confirm they are identical.
  */
 /* config.h.  Generated from build/cmake/config.h.in by cmake configure */
-#define __LIBARCHIVE_CONFIG_H_INCLUDED 1
 
 /*
  * Ensure we have C99-style int64_t, etc, all defined.
@@ -578,6 +577,9 @@ typedef uint64_t uintmax_t;
 /* Define to 1 if you have the <expat.h> header file. */
 /* #undef HAVE_EXPAT_H */
 
+/* Define to 1 if you have the 'explicit_bzero' function. */
+/* #undef HAVE_EXPLICIT_BZERO */
+
 /* Define to 1 if you have the <ext2fs/ext2_fs.h> header file. */
 /* #undef HAVE_EXT2FS_EXT2_FS_H */
 
@@ -941,8 +943,8 @@ typedef uint64_t uintmax_t;
 /* Define to 1 if you have the 'memmove' function. */
 /* #undef HAVE_MEMMOVE */
 
-/* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
+/* Define to 1 if you have the 'memset_explicit' function. */
+/* #undef HAVE_MEMSET_EXPLICIT */
 
 /* Define to 1 if you have the 'mkdir' function. */
 #define HAVE_MKDIR 1
